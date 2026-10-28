@@ -167,6 +167,17 @@ Le moteur (`custom_components/tarifeau/calcul.py`, Python pur) reprend les règl
 - sorties pour les capteurs : **prix marginal** du prochain m³ (TTC), **prix moyen**, tranche actuelle et volume restant avant la tranche suivante ;
 - si l'index revient en arrière, le compteur est considéré comme remplacé.
 
+## Données et licences
+
+- **Origine des barèmes** : chaque préréglage de `custom_components/tarifeau/tarifs/` recopie les tarifs votés par la collectivité qui gère le service : abonnements, prix au m³, tranches, redevances de l'agence de l'eau perçues sur la facture, taux de TVA. Chaque période du fichier donne l'URL de sa source (`source`) et, s'il y a lieu, la date de la délibération (`date_source`). Ces deux informations sont reprises dans les attributs du capteur « Coût depuis la dernière relève ».
+  - Grand Besançon Métropole : délibération tarifaire du 11/12/2025, reprise dans le RPQS 2025 (conseil communautaire du 24/09/2026). Les délibérations sont publiées sur [OpenData Besançon](https://data.grandbesancon.fr/opendata/dataset/conseilsCommunautaires) sous **Licence Ouverte** (Etalab).
+  - Grand Belfort : page publique [Abonnements et tarifs](https://www.grandbelfort.fr/eau/abonnements-et-tarifs.html) de la Direction du cycle de l'eau.
+- **TVA** : taux légaux (5,5 % pour l'eau potable, 10 % pour l'assainissement collectif), tels qu'ils figurent sur les délibérations et les factures. La source fait foi si elle en indique d'autres, comme pour l'assainissement du Grand Belfort, qui n'est pas soumis à la TVA.
+- **Conditions de réutilisation** : les tarifs votés par une collectivité sont des informations publiques, librement réutilisables à condition de ne pas les altérer et d'en mentionner la source et la date de mise à jour (articles L321-1 et L322-1 du Code des relations entre le public et l'administration). Les préréglages respectent cette règle : valeurs recopiées sans modification, URL et date de la source conservées. Seuls les montants sont repris, jamais les documents eux-mêmes.
+- **Source « entité de prix »** : les prix moyens lus sur une entité [HydroTarif](https://github.com/jul-fls/ha-hydrotarif) proviennent de SISPEA / Eaufrance. Leur source est l'URL exposée par cette entité (`water_source_url`).
+- **Tarifs personnels** : un fichier de `/config/tarifeau/` reste sous la responsabilité de son auteur, qui doit indiquer sa propre source.
+- **Code** : licence [MIT](LICENSE) (intégration Home Assistant, exception SOCLE §1).
+
 ## Développement
 
 ```bash
