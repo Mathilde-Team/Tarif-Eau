@@ -2,6 +2,12 @@
 
 Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les numéros suivent [SemVer](https://semver.org/lang/fr/), et la version de `manifest.json` est égale au tag.
 
+## [Non publié]
+
+### Documentation
+
+- README : nouvelle section « Données et licences » (origine des barèmes des préréglages, Licence Ouverte des délibérations du Grand Besançon, conditions de réutilisation des informations publiques, source des prix HydroTarif) (#60).
+
 ## [0.2.0] - 2026-10-22
 
 ### Ajouté
