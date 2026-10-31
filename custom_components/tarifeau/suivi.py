@@ -39,6 +39,7 @@ from .const import (
     MOIS_PAR_FACTURATION,
     SOURCE_ENTITE_PRIX,
     SOURCE_PREREGLAGE,
+    SOURCE_SISPEA,
     SOURCE_TAUX_FACTURE,
     UNITES_INDEX,
 )
@@ -135,7 +136,7 @@ def charger_tarif_config(config: dict[str, Any], dossier_perso: Path | None = No
     if config.get(CONF_SOURCE) == SOURCE_TAUX_FACTURE:
         _LOGGER.debug("charger_tarif_config: sortie")
         return tarif_taux_facture(config[CONF_MONTANT_FACTURE], config[CONF_VOLUME_FACTURE])
-    if config.get(CONF_SOURCE) == SOURCE_PREREGLAGE:
+    if config.get(CONF_SOURCE) in (SOURCE_PREREGLAGE, SOURCE_SISPEA):  # SISPEA : sispea:<commune>…
         tarif = charger_tarif(config[CONF_PREREGLAGE], dossier_perso)
         if CONF_DIAMETRE in config:
             tarif = avec_diametre(tarif, config[CONF_DIAMETRE])
