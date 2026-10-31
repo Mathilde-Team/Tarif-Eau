@@ -17,15 +17,18 @@ CONF_FIN_PERIODE = "fin_periode"  # AAAA-MM-JJ, facultatif : fin réelle de la p
 CONF_INDEX_RELEVE = "index_releve"  # m³, repris de la facture
 CONF_ASSAINISSEMENT = "assainissement"
 CONF_DIAMETRE = "diametre"  # DN du compteur en mm, si l'abonnement en dépend
+CONF_COMMUNE = "commune"  # saisie de la source SISPEA : « Besançon (25056) », nom ou code INSEE
 
 SOURCE_PREREGLAGE = "prereglage"
 SOURCE_PRIX_FIXE = "prix_fixe"
 SOURCE_ENTITE_PRIX = "entite_prix"
 SOURCE_TAUX_FACTURE = "taux_facture"
-SOURCES = (SOURCE_PREREGLAGE, SOURCE_PRIX_FIXE, SOURCE_ENTITE_PRIX, SOURCE_TAUX_FACTURE)
+SOURCE_SISPEA = "sispea"  # tarif national de la commune (open data SISPEA, issue #43)
+SOURCES = (SOURCE_PREREGLAGE, SOURCE_SISPEA, SOURCE_PRIX_FIXE, SOURCE_ENTITE_PRIX, SOURCE_TAUX_FACTURE)
 # Champs propres à chaque source : effacés quand on change de source.
 CHAMPS_SOURCE = {
     SOURCE_PREREGLAGE: ("prereglage", "assainissement", "diametre"),
+    SOURCE_SISPEA: ("prereglage", "assainissement", "commune"),
     SOURCE_PRIX_FIXE: ("prix_fixe",),
     SOURCE_ENTITE_PRIX: ("entite_prix",),
     SOURCE_TAUX_FACTURE: ("montant_facture", "volume_facture"),

@@ -54,6 +54,15 @@ Les capteurs gardent leur dernière valeur si l'index devient indisponible, et l
 
 **Tableau de bord Énergie** : Paramètres → Tableaux de bord → Énergie → Consommation d'eau → ajouter le capteur d'index, puis « Utiliser une entité avec le prix actuel » → **Prix marginal**.
 
+## Source « Ma commune » (données nationales SISPEA)
+
+Pas de préréglage pour ta collectivité ? Choisis la source « Ma commune (données nationales SISPEA) ». Le tarif **détaillé** de ta commune est alors repris de l'observatoire national [SISPEA](https://www.services.eaufrance.fr/pro/telechargement) : abonnements, tranches (part de la collectivité et part du délégataire), redevances de l'agence de l'eau et TVA, pour l'eau potable et l'assainissement collectif.
+
+- La commune est proposée d'après la position de Home Assistant ([API Découpage administratif](https://geo.api.gouv.fr/decoupage-administratif)). Tu peux aussi saisir son nom ou son code INSEE. Si plusieurs services desservent la commune (zones), ou si plusieurs communes portent ce nom, tu choisis dans une liste qui donne le prix TTC de 120 m³ de chaque service.
+- Le jeu est embarqué dans l'intégration (`tarifs/sispea.json.gz`, environ 760 Ko) : aucun appel réseau pour le calcul. L'exercice 2025 compte 11 653 services et 30 124 communes ; ce sont les tarifs au 1er janvier 2026.
+- **Contrôle** : un service n'est gardé que si sa facture de 120 m³, recalculée, redonne au centime le prix TTC publié dans SISPEA (indicateurs D102.0 et D204.0). Les services incohérents ou sans tarif détaillé sont écartés : pour eux, il reste la source « Entité de prix » ci-dessous. Les préréglages Grand Besançon et Grand Belfort, vérifiés sur des factures, donnent exactement les mêmes montants que leurs services SISPEA.
+- **Limites** : les données sont déclarées par les collectivités, et une partie est « publiée sans vérification » : compare avec ta facture. Les tranches sont cumulées sur l'année (`cumul_annuel`), car SISPEA ne dit pas si elles sont proratisées. Les frais propres à un compteur (diamètre, location) n'y figurent pas. Le jeu est refait chaque année avec `uv run scripts/generer_sispea.py --exercice <année>`.
+
 ## Source « entité de prix » (HydroTarif)
 
 Ta collectivité n'a pas encore de préréglage ? [HydroTarif](https://github.com/jul-fls/ha-hydrotarif) donne, pour chaque commune, le prix de l'eau publié dans l'observatoire national [SISPEA](https://www.services.eaufrance.fr/). Choisis la source « Entité de prix », puis son capteur « Prix total » (en €/m³). N'importe quel capteur en €/m³ convient aussi.
@@ -174,6 +183,7 @@ Le moteur (`custom_components/tarifeau/calcul.py`, Python pur) reprend les règl
   - Grand Belfort : page publique [Abonnements et tarifs](https://www.grandbelfort.fr/eau/abonnements-et-tarifs.html) de la Direction du cycle de l'eau.
 - **TVA** : taux légaux (5,5 % pour l'eau potable, 10 % pour l'assainissement collectif), tels qu'ils figurent sur les délibérations et les factures. La source fait foi si elle en indique d'autres, comme pour l'assainissement du Grand Belfort, qui n'est pas soumis à la TVA.
 - **Conditions de réutilisation** : les tarifs votés par une collectivité sont des informations publiques, librement réutilisables à condition de ne pas les altérer et d'en mentionner la source et la date de mise à jour (articles L321-1 et L322-1 du Code des relations entre le public et l'administration). Les préréglages respectent cette règle : valeurs recopiées sans modification, URL et date de la source conservées. Seuls les montants sont repris, jamais les documents eux-mêmes.
+- **Source « Ma commune »** : `tarifs/sispea.json.gz` est tiré des [données SISPEA](https://www.services.eaufrance.fr/pro/telechargement) (« Données annuelles sur les tarifs », eau potable et assainissement collectif) de l'Office français de la biodiversité, sous **Licence Ouverte 2.0**. Le jeu garde les montants sans les modifier, ainsi que l'exercice et la date de l'extraction (`date_source`). La `source` de chaque tarif est la fiche SISPEA du service.
 - **Source « entité de prix »** : les prix moyens lus sur une entité [HydroTarif](https://github.com/jul-fls/ha-hydrotarif) proviennent de SISPEA / Eaufrance. Leur source est l'URL exposée par cette entité (`water_source_url`).
 - **Tarifs personnels** : un fichier de `/config/tarifeau/` reste sous la responsabilité de son auteur, qui doit indiquer sa propre source.
 - **Code** : licence [MIT](LICENSE) (intégration Home Assistant, exception SOCLE §1).

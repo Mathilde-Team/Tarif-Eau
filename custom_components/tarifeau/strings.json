@@ -24,6 +24,21 @@
           "assainissement": "Raccordé au tout-à-l'égout (assainissement collectif)"
         }
       },
+      "commune": {
+        "title": "Ta commune",
+        "description": "Tarif détaillé de ta commune (abonnements, tranches, redevances, TVA), tiré de l'open data national SISPEA, exercice {exercice} (tarifs au 1er janvier suivant), {communes} communes. Saisis le nom de la commune ou son code INSEE ; la position de Home Assistant la propose par défaut. Données déclarées par les collectivités, souvent « publiées sans vérification » : compare avec ta facture. {erreur}",
+        "data": {
+          "commune": "Commune (nom ou code INSEE)",
+          "assainissement": "Raccordé au tout-à-l'égout (assainissement collectif)"
+        }
+      },
+      "commune_service": {
+        "title": "Service d'eau de ta commune",
+        "description": "Plusieurs services ou communes correspondent : choisis le tien (le prix TTC indiqué est celui d'une facture de 120 m³/an).",
+        "data": {
+          "prereglage": "Services"
+        }
+      },
       "prix_fixe": {
         "title": "Prix fixe",
         "description": "Prix moyen TTC au m³, abonnement compris (celui de ta dernière facture, par exemple).",
@@ -79,10 +94,12 @@
       "prix_indisponible": "Le prix de ce capteur est indisponible pour l'instant.",
       "volume_nul": "Le volume doit être supérieur à zéro.",
       "tarif_invalide": "Tarif invalide : {erreur}",
-      "fin_avant_debut": "La fin de la période doit être après son début."
+      "fin_avant_debut": "La fin de la période doit être après son début.",
+      "commune_inconnue": "Commune introuvable dans les données SISPEA (ou sans tarif détaillé fiable). Essaie le code INSEE, ou la source « Entité de prix » (HydroTarif)."
     },
     "abort": {
-      "already_configured": "Ce capteur a déjà sa facture."
+      "already_configured": "Ce capteur a déjà sa facture.",
+      "tarif_invalide": "Tarif invalide : {erreur}"
     }
   },
   "options": {
@@ -108,6 +125,21 @@
         "data": {
           "prereglage": "Collectivité",
           "assainissement": "Raccordé au tout-à-l'égout (assainissement collectif)"
+        }
+      },
+      "commune": {
+        "title": "Ta commune",
+        "description": "Tarif détaillé de ta commune (abonnements, tranches, redevances, TVA), tiré de l'open data national SISPEA, exercice {exercice} (tarifs au 1er janvier suivant), {communes} communes. Saisis le nom de la commune ou son code INSEE ; la position de Home Assistant la propose par défaut. Données déclarées par les collectivités, souvent « publiées sans vérification » : compare avec ta facture. {erreur}",
+        "data": {
+          "commune": "Commune (nom ou code INSEE)",
+          "assainissement": "Raccordé au tout-à-l'égout (assainissement collectif)"
+        }
+      },
+      "commune_service": {
+        "title": "Service d'eau de ta commune",
+        "description": "Plusieurs services ou communes correspondent : choisis le tien (le prix TTC indiqué est celui d'une facture de 120 m³/an).",
+        "data": {
+          "prereglage": "Services"
         }
       },
       "prix_fixe": {
@@ -169,13 +201,18 @@
       "prix_indisponible": "Le prix de ce capteur est indisponible pour l'instant.",
       "volume_nul": "Le volume doit être supérieur à zéro.",
       "tarif_invalide": "Tarif invalide : {erreur}",
-      "fin_avant_debut": "La fin de la période doit être après son début."
+      "fin_avant_debut": "La fin de la période doit être après son début.",
+      "commune_inconnue": "Commune introuvable dans les données SISPEA (ou sans tarif détaillé fiable). Essaie le code INSEE, ou la source « Entité de prix » (HydroTarif)."
+    },
+    "abort": {
+      "tarif_invalide": "Tarif invalide : {erreur}"
     }
   },
   "selector": {
     "source_tarif": {
       "options": {
         "prereglage": "Tarif d'une collectivité",
+        "sispea": "Ma commune (données nationales SISPEA)",
         "prix_fixe": "Prix fixe au m³",
         "entite_prix": "Entité de prix (HydroTarif…)",
         "taux_facture": "Taux de la dernière facture"
