@@ -4,6 +4,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les numéros 
 
 ## [Non publié]
 
+- CI et publication : repli GitHub autorisé, publication manuelle sur un tag
+  déjà livré dans main, vérification d’ascendance et archives du tag exact.
+
+
 ### Documentation
 
 - README : nouvelle section « Données et licences » (origine des barèmes des préréglages, Licence Ouverte des délibérations du Grand Besançon, conditions de réutilisation des informations publiques, source des prix HydroTarif) (#60).
