@@ -64,6 +64,7 @@ DOSSIER_TARIFS = Path(__file__).parent / "tarifs"
 # Tarifs personnels (issue #17) : fichiers YAML au même format, dans <config>/tarifeau/.
 NOM_DOSSIER_PERSO = "tarifeau"
 PREFIXE_PERSO = "perso:"
+PREFIXE_SISPEA = "sispea:"  # tarifs nationaux (sispea.py, issue #43)
 EXTENSIONS_PERSO = (".yaml", ".yml")
 
 
@@ -442,10 +443,15 @@ def chemin_tarif(source: str | Path, dossier_perso: Path | None = None) -> Path:
 
 
 def charger_tarif(source: str | Path, dossier_perso: Path | None = None) -> Tarif:
-    """Lit un tarif YAML : chemin, identifiant d'un préréglage de ``tarifs/`` ou ``perso:<nom>``."""
+    """Lit un tarif : chemin YAML, préréglage de ``tarifs/``, ``perso:<nom>`` ou ``sispea:<commune>…``."""
     _LOGGER.debug(
         "charger_tarif: entrée | source=%s, dossier_perso=%s", resumer(source), resumer(dossier_perso)
     )
+    if isinstance(source, str) and source.startswith(PREFIXE_SISPEA):
+        from .sispea import tarif_sispea  # import différé : sispea importe ce module
+
+        _LOGGER.debug("charger_tarif: sortie | jeu SISPEA")
+        return tarif_sispea(source)
     chemin = chemin_tarif(source, dossier_perso)
     try:
         donnees = yaml.safe_load(chemin.read_text(encoding="utf-8"))
