@@ -4,6 +4,10 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/). Les numéros 
 
 ## [Non publié]
 
+### Ajouté
+
+- **Source « Ma commune » (données nationales SISPEA)** (#43) : tarif détaillé de chaque commune (abonnements, tranches part collectivité et part délégataire, redevances, TVA, eau potable et assainissement collectif), tiré de l'open data SISPEA, exercice 2025 (tarifs au 1er janvier 2026) : 11 653 services et 30 124 communes. La commune est proposée d'après la position de Home Assistant. Ne sont gardés que les services dont la facture de 120 m³ recalculée redonne le prix TTC publié. Le jeu est produit par `scripts/generer_sispea.py`.
+
 ### Documentation
 
 - README : nouvelle section « Données et licences » (origine des barèmes des préréglages, Licence Ouverte des délibérations du Grand Besançon, conditions de réutilisation des informations publiques, source des prix HydroTarif) (#60).

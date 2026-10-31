@@ -24,6 +24,21 @@
           "assainissement": "Connected to the public sewer (collective sanitation)"
         }
       },
+      "commune": {
+        "title": "Your town",
+        "description": "Detailed tariff of your town (subscriptions, tiers, fees, VAT) from the French national SISPEA open data, financial year {exercice} (tariffs from the following 1 January), {communes} towns. Enter the town name or its INSEE code; Home Assistant's location suggests it by default. Data declared by local authorities, often published unverified: compare with your bill. {erreur}",
+        "data": {
+          "commune": "Town (name or INSEE code)",
+          "assainissement": "Connected to the public sewer (collective sanitation)"
+        }
+      },
+      "commune_service": {
+        "title": "Water service of your town",
+        "description": "Several services or towns match: choose yours (the price shown is for a 120 m³/year bill, VAT included).",
+        "data": {
+          "prereglage": "Services"
+        }
+      },
       "prix_fixe": {
         "title": "Fixed price",
         "description": "Average price per m³ including VAT and subscription (from your last bill, for instance).",
@@ -79,10 +94,12 @@
       "prix_indisponible": "This sensor's price is currently unavailable.",
       "volume_nul": "Volume must be greater than zero.",
       "tarif_invalide": "Invalid rate: {erreur}",
-      "fin_avant_debut": "The end of the period must be after its start."
+      "fin_avant_debut": "The end of the period must be after its start.",
+      "commune_inconnue": "Town not found in the SISPEA data (or without a reliable detailed tariff). Try the INSEE code, or the « Price entity » source (HydroTarif)."
     },
     "abort": {
-      "already_configured": "This sensor already has a bill."
+      "already_configured": "This sensor already has a bill.",
+      "tarif_invalide": "Invalid tariff: {erreur}"
     }
   },
   "options": {
@@ -108,6 +125,21 @@
         "data": {
           "prereglage": "Local authority",
           "assainissement": "Connected to the public sewer (collective sanitation)"
+        }
+      },
+      "commune": {
+        "title": "Your town",
+        "description": "Detailed tariff of your town (subscriptions, tiers, fees, VAT) from the French national SISPEA open data, financial year {exercice} (tariffs from the following 1 January), {communes} towns. Enter the town name or its INSEE code; Home Assistant's location suggests it by default. Data declared by local authorities, often published unverified: compare with your bill. {erreur}",
+        "data": {
+          "commune": "Town (name or INSEE code)",
+          "assainissement": "Connected to the public sewer (collective sanitation)"
+        }
+      },
+      "commune_service": {
+        "title": "Water service of your town",
+        "description": "Several services or towns match: choose yours (the price shown is for a 120 m³/year bill, VAT included).",
+        "data": {
+          "prereglage": "Services"
         }
       },
       "prix_fixe": {
@@ -169,13 +201,18 @@
       "prix_indisponible": "This sensor's price is currently unavailable.",
       "volume_nul": "Volume must be greater than zero.",
       "tarif_invalide": "Invalid rate: {erreur}",
-      "fin_avant_debut": "The end of the period must be after its start."
+      "fin_avant_debut": "The end of the period must be after its start.",
+      "commune_inconnue": "Town not found in the SISPEA data (or without a reliable detailed tariff). Try the INSEE code, or the « Price entity » source (HydroTarif)."
+    },
+    "abort": {
+      "tarif_invalide": "Invalid tariff: {erreur}"
     }
   },
   "selector": {
     "source_tarif": {
       "options": {
         "prereglage": "Local authority tariff",
+        "sispea": "My town (French national SISPEA data)",
         "prix_fixe": "Fixed price per m³",
         "entite_prix": "Price entity (HydroTarif…)",
         "taux_facture": "Last bill rate"
