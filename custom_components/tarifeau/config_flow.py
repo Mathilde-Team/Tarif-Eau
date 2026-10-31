@@ -11,15 +11,18 @@ import logging
 from datetime import date
 from typing import Any
 
+import aiohttp
 import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry, ConfigFlow, ConfigFlowResult, OptionsFlowWithReload
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry, entity_registry, selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
     CHAMPS_SOURCE,
     CONF_ASSAINISSEMENT,
+    CONF_COMMUNE,
     CONF_DATE_RELEVE,
     CONF_DIAMETRE,
     CONF_ENTITE_PRIX,
@@ -39,6 +42,7 @@ from .const import (
     SOURCE_ENTITE_PRIX,
     SOURCE_PREREGLAGE,
     SOURCE_PRIX_FIXE,
+    SOURCE_SISPEA,
     SOURCE_TAUX_FACTURE,
     SOURCES,
     STATE_CLASSES_INDEX,
@@ -54,9 +58,14 @@ from .modele import (
     prereglages,
     verifier_tarifs_perso,
 )
+from .sispea import charger_jeu, choix_commune, rechercher_communes
 from .suivi import dossier_perso, prix_entite, unite_prix_valide
 
 _LOGGER = logging.getLogger(__name__)
+
+# Commune de la position de Home Assistant (API Découpage administratif, Etalab) : valeur par défaut.
+URL_GEO_COMMUNES = "https://geo.api.gouv.fr/communes"
+DELAI_GEO = 5  # secondes : au-delà, le champ reste vide
 
 
 def index_actuel_m3(hass: HomeAssistant, entity_id: str) -> float | None:
@@ -222,6 +231,36 @@ def _schema_prereglage(options: list[selector.SelectOptionDict], actuel: dict[st
     )
 
 
+async def _commune_ha(hass: HomeAssistant) -> str | None:
+    """« Nom (INSEE) » de la commune où se trouve Home Assistant, ``None`` si inconnue ou hors ligne."""
+    _LOGGER.debug("_commune_ha: entrée | hass=%s", resumer(hass))
+    params = {"lat": str(hass.config.latitude), "lon": str(hass.config.longitude), "fields": "nom,code"}
+    try:
+        reponse = await async_get_clientsession(hass).get(
+            URL_GEO_COMMUNES, params=params, timeout=aiohttp.ClientTimeout(total=DELAI_GEO)
+        )
+        reponse.raise_for_status()
+        commune = (await reponse.json())[0]
+        resultat = f"{commune['nom']} ({commune['code']})"
+    except (aiohttp.ClientError, TimeoutError, ValueError, KeyError, IndexError, TypeError) as err:
+        _LOGGER.debug("_commune_ha: %s interceptée, pas de commune par défaut | %s", type(err).__name__, err)
+        resultat = None
+    _LOGGER.debug("_commune_ha: sortie | %s", resumer(resultat))
+    return resultat
+
+
+def _schema_commune(actuel: dict[str, Any], defaut: str | None) -> vol.Schema:
+    _LOGGER.debug("_schema_commune: entrée | actuel=%s, defaut=%s", resumer(actuel), resumer(defaut))
+    suggestion = actuel.get(CONF_COMMUNE) or defaut
+    _LOGGER.debug("_schema_commune: sortie")
+    return vol.Schema(
+        {
+            vol.Required(CONF_COMMUNE, description={"suggested_value": suggestion}): str,
+            vol.Required(CONF_ASSAINISSEMENT, default=actuel.get(CONF_ASSAINISSEMENT, True)): bool,
+        }
+    )
+
+
 def _schema_prix_fixe(actuel: dict[str, Any]) -> vol.Schema:
     return vol.Schema(
         {
@@ -338,6 +377,8 @@ class _EtapesTarif:
     _donnees: dict[str, Any]
     _diametres: list[int]
     _prereglage: dict[str, Any]
+    _choix_sispea: list[tuple[str, str]]
+    _saisie_sispea: dict[str, Any]
 
     def _actuel(self) -> dict[str, Any]:
         return self._donnees
@@ -353,6 +394,9 @@ class _EtapesTarif:
             if user_input[CONF_SOURCE] == SOURCE_PREREGLAGE:
                 _LOGGER.debug("_EtapesTarif.async_step_tarif: sortie")
                 return await self.async_step_prereglage()
+            if user_input[CONF_SOURCE] == SOURCE_SISPEA:
+                _LOGGER.debug("_EtapesTarif.async_step_tarif: sortie")
+                return await self.async_step_commune()
             if user_input[CONF_SOURCE] == SOURCE_PRIX_FIXE:
                 _LOGGER.debug("_EtapesTarif.async_step_tarif: sortie")
                 return await self.async_step_prix_fixe()
@@ -431,6 +475,71 @@ class _EtapesTarif:
         )
         _LOGGER.debug("_EtapesTarif.async_step_diametre: sortie")
         return self.async_show_form(step_id="diametre", data_schema=schema)
+
+    async def async_step_commune(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Tarif national de la commune (open data SISPEA, issue #43)."""
+        _LOGGER.debug("_EtapesTarif.async_step_commune: entrée | user_input=%s", resumer(user_input))
+        erreurs: dict[str, str] = {}
+        details = {"erreur": "", "exercice": "", "communes": ""}
+        try:
+            jeu = await self.hass.async_add_executor_job(charger_jeu)
+        except TarifInvalide as err:
+            _LOGGER.debug("_EtapesTarif.async_step_commune: TarifInvalide interceptée | %s", err)
+            erreurs["base"], details["erreur"] = "tarif_invalide", str(err)
+            jeu = None
+        if jeu is not None:
+            details |= {"exercice": str(jeu["exercice"]), "communes": str(len(jeu["communes"]))}
+        if jeu is not None and user_input is not None:
+            codes = await self.hass.async_add_executor_job(rechercher_communes, jeu, user_input[CONF_COMMUNE])
+            if not codes:
+                erreurs[CONF_COMMUNE] = "commune_inconnue"
+            else:
+                self._saisie_sispea = user_input
+                self._choix_sispea = [c for code in codes for c in choix_commune(jeu, code)]
+                if len(self._choix_sispea) == 1:
+                    _LOGGER.debug("_EtapesTarif.async_step_commune: sortie | choix unique")
+                    return await self._garder_sispea(self._choix_sispea[0][0])
+                _LOGGER.debug("_EtapesTarif.async_step_commune: sortie | plusieurs choix")
+                return await self.async_step_commune_service()
+        defaut = None if self._actuel().get(CONF_COMMUNE) else await _commune_ha(self.hass)
+        _LOGGER.debug("_EtapesTarif.async_step_commune: sortie")
+        return self.async_show_form(
+            step_id="commune",
+            data_schema=_schema_commune({**self._actuel(), **(user_input or {})}, defaut),
+            errors=erreurs,
+            description_placeholders=details,
+        )
+
+    async def async_step_commune_service(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
+        """Plusieurs services (ou homonymes) pour la saisie : choix du couple eau / assainissement."""
+        _LOGGER.debug("_EtapesTarif.async_step_commune_service: entrée | user_input=%s", resumer(user_input))
+        if user_input is not None:
+            _LOGGER.debug("_EtapesTarif.async_step_commune_service: sortie")
+            return await self._garder_sispea(user_input[CONF_PREREGLAGE])
+        options = [selector.SelectOptionDict(value=v, label=libelle) for v, libelle in self._choix_sispea]
+        actuel = self._actuel().get(CONF_PREREGLAGE)
+        defaut = actuel if actuel in {v for v, _ in self._choix_sispea} else self._choix_sispea[0][0]
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PREREGLAGE, default=defaut): selector.SelectSelector(
+                    selector.SelectSelectorConfig(options=options)
+                )
+            }
+        )
+        _LOGGER.debug("_EtapesTarif.async_step_commune_service: sortie")
+        return self.async_show_form(step_id="commune_service", data_schema=schema)
+
+    async def _garder_sispea(self, ident: str) -> ConfigFlowResult:
+        """Vérifie le tarif SISPEA choisi, puis le garde avec la saisie de la commune."""
+        _LOGGER.debug("_EtapesTarif._garder_sispea: entrée | ident=%s", resumer(ident))
+        try:
+            await self.hass.async_add_executor_job(charger_tarif, ident)
+        except TarifInvalide as err:
+            _LOGGER.debug("_EtapesTarif._garder_sispea: TarifInvalide interceptée | %s", err)
+            _LOGGER.debug("_EtapesTarif._garder_sispea: sortie")
+            return self.async_abort(reason="tarif_invalide", description_placeholders={"erreur": str(err)})
+        _LOGGER.debug("_EtapesTarif._garder_sispea: sortie")
+        return await self._garder(SOURCE_SISPEA, {**self._saisie_sispea, CONF_PREREGLAGE: ident})
 
     async def async_step_prix_fixe(self, user_input: dict[str, Any] | None = None) -> ConfigFlowResult:
         """Prix TTC au m³, abonnement compris."""

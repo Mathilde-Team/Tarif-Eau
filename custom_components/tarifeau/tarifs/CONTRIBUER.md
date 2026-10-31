@@ -2,6 +2,8 @@
 
 Chaque fichier de ce dossier est un **préréglage** : le tarif d'un **service** d'eau (une régie, un délégataire…), et non celui d'une adresse. Un même territoire peut avoir plusieurs zones ou services : par exemple, le Grand Besançon a une régie, d'anciens contrats de délégation (ex-Osselle, ex-Haute-Loue…) et le SIVOM de la Vallée.
 
+Avant tout : la source « Ma commune (données nationales SISPEA) » donne déjà le tarif détaillé de plus de 30 000 communes (`sispea.json.gz`, produit par `scripts/generer_sispea.py`, voir le README). Un préréglage reste utile si SISPEA écarte ton service, s'il est en retard d'un an, ou si la facture applique une règle que SISPEA ne décrit pas (tranches proratisées, abonnement selon le diamètre…).
+
 Plus simple : ouvre une issue **« Ajouter ma commune »** avec les valeurs, et elle sera saisie pour toi.
 
 ## 1. Trouver la source officielle
